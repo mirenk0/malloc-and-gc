@@ -1,8 +1,8 @@
 #include "malloc.h"
+#include <stdint.h>
 #include <unistd.h>
 
 #define align4(x) ((((x) - 1) >> 2 << 2) + 4)
-#define BLOCK_SIZE 20
 
 typedef struct s_block *t_block;
 
@@ -12,12 +12,14 @@ struct s_block {
   t_block prev;
   int free;
   void *ptr;
-  char data[1];
+  char data[1]; // placeholder for pointer arithmetic
 };
+
+#define BLOCK_SIZE (sizeof(struct s_block) - sizeof(char))
 
 void *base = NULL;
 
-// Internal helpers
+// Internal functions
 t_block find_block(t_block *last, size_t size);
 t_block extend_heap(t_block last, size_t size);
 void split_block(t_block b, size_t size);
@@ -26,6 +28,7 @@ int valid_addr(void *p);
 t_block get_block(void *p);
 void copy_block(t_block src, t_block dst);
 
+// malloc
 void *malloc(size_t size) {
   t_block b, last;
   size_t s = align4(size);
@@ -50,6 +53,7 @@ void *malloc(size_t size) {
   return b->data;
 }
 
+// free
 void free(void *p) {
   if (valid_addr(p)) {
     t_block b = get_block(p);
@@ -68,18 +72,19 @@ void free(void *p) {
   }
 }
 
+// calloc
 void *calloc(size_t number, size_t size) {
-  size_t *new;
-  size_t s4, i;
-  new = malloc(number * size);
+  size_t total = number * size;
+  void *new = malloc(total);
   if (new) {
-    s4 = align4(number * size) >> 2;
-    for (i = 0; i < s4; i++)
-      new[i] = 0;
+    char *p = (char *)new;
+    for (size_t i = 0; i < total; i++)
+      p[i] = 0;
   }
   return new;
 }
 
+// realloc
 void *realloc(void *p, size_t size) {
   if (!p)
     return malloc(size);
@@ -109,6 +114,7 @@ void *realloc(void *p, size_t size) {
   return p;
 }
 
+// reallocf
 void *reallocf(void *p, size_t size) {
   void *newp = realloc(p, size);
   if (!newp)
@@ -116,8 +122,7 @@ void *reallocf(void *p, size_t size) {
   return newp;
 }
 
-// Internal functions
-
+// find_block
 t_block find_block(t_block *last, size_t size) {
   t_block b = base;
   while (b && !(b->free && b->size >= size)) {
@@ -127,6 +132,7 @@ t_block find_block(t_block *last, size_t size) {
   return b;
 }
 
+// extend_heap
 t_block extend_heap(t_block last, size_t size) {
   t_block b = sbrk(0);
   if ((intptr_t)sbrk(BLOCK_SIZE + size) == -1)
@@ -141,8 +147,9 @@ t_block extend_heap(t_block last, size_t size) {
   return b;
 }
 
+// split_block
 void split_block(t_block b, size_t size) {
-  t_block newb = (t_block)(b->data + size);
+  t_block newb = (t_block)((char *)b + BLOCK_SIZE + size);
   newb->size = b->size - size - BLOCK_SIZE;
   newb->next = b->next;
   newb->prev = b;
@@ -154,6 +161,7 @@ void split_block(t_block b, size_t size) {
     newb->next->prev = newb;
 }
 
+// fusion
 t_block fusion(t_block b) {
   if (b->next && b->next->free) {
     b->size += BLOCK_SIZE + b->next->size;
@@ -164,15 +172,18 @@ t_block fusion(t_block b) {
   return b;
 }
 
+// get_block
 t_block get_block(void *p) { return (t_block)((char *)p - BLOCK_SIZE); }
 
+// valid_addr
 int valid_addr(void *p) {
   if (base && p > base && p < sbrk(0)) {
-    return (p == get_block(p)->ptr);
+    return p == get_block(p)->ptr;
   }
   return 0;
 }
 
+// copy_block
 void copy_block(t_block src, t_block dst) {
   int *sdata = src->ptr;
   int *ddata = dst->ptr;
