@@ -1,9 +1,18 @@
 #include "vm.h"
-#include "snekobject.h"
 #include "stack.h"
 
-void vm_track_object(vm_t *vm, snek_object_t *obj) {
-  stack_push(vm->objects, obj);
+void vm_free(vm_t *vm) {
+  for (int i = 0; i < vm->frames->count; i++) {
+    frame_free(vm->frames->data[i]);
+  }
+  stack_free(vm->frames);
+
+  for (int i = 0; i < vm->objects->count; i++) {
+    snek_object_free(vm->objects->data[i]);
+  }
+  stack_free(vm->objects);
+
+  free(vm);
 }
 
 vm_t *vm_new() {
@@ -17,13 +26,8 @@ vm_t *vm_new() {
   return vm;
 }
 
-void vm_free(vm_t *vm) {
-  for (int i = 0; i < vm->frames->count; i++) {
-    frame_free(vm->frames->data[i]);
-  }
-  stack_free(vm->frames);
-  stack_free(vm->objects);
-  free(vm);
+void vm_track_object(vm_t *vm, snek_object_t *obj) {
+  stack_push(vm->objects, obj);
 }
 
 void vm_frame_push(vm_t *vm, frame_t *frame) { stack_push(vm->frames, frame); }

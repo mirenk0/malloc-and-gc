@@ -1,7 +1,7 @@
+#include "sneknew.h"
 #include <stdlib.h>
 #include <string.h>
 
-#include "sneknew.h"
 #include "snekobject.h"
 #include "vm.h"
 
