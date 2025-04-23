@@ -1,5 +1,4 @@
 #include "vm.h"
-#include "snekobject.h"
 #include "stack.h"
 
 void frame_reference_object(frame_t *frame, snek_object_t *obj) {
