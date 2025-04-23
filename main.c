@@ -17,14 +17,19 @@ int main() {
   strcpy(str, "hi");
   printf("str = %s\n", str);
 
-  str = realloc(str, 20);
-  if (!str)
+  printf("About to realloc\n");
+  char *newstr = realloc(str, 20);
+  if (!newstr) {
+    printf("realloc failed\n");
     return 1;
-  strcat(str, " there");
-  printf("str = %s\n", str);
+  }
+  printf("Realloc successful\n");
+
+  strcat(newstr, " there");
+  printf("str = %s\n", newstr);
 
   free(a);
-  free(str);
+  free(newstr);
 
   printf("Memory freed successfully\n");
   return 0;
