@@ -4,6 +4,8 @@
 #include "stack.h"
 
 void stack_push(stack_t *stack, void *obj) {
+  assert_ptr_not_null(obj, "must not have null obj");
+
   if (stack->count == stack->capacity) {
     // Double stack capacity to avoid reallocing often
     stack->capacity *= 2;
