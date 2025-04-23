@@ -185,8 +185,9 @@ int valid_addr(void *p) {
 
 // copy_block
 void copy_block(t_block src, t_block dst) {
-  int *sdata = src->ptr;
-  int *ddata = dst->ptr;
-  for (size_t i = 0; i * 4 < src->size && i * 4 < dst->size; i++)
+  char *sdata = src->ptr;
+  char *ddata = dst->ptr;
+  size_t size = src->size < dst->size ? src->size : dst->size;
+  for (size_t i = 0; i < size; ++i)
     ddata[i] = sdata[i];
 }
