@@ -5,26 +5,44 @@
 
 #include "snekobject.h"
 
-void refcount_dec(snek_object_t *obj) {
-  if (obj == NULL) {
-    return;
-  }
-  obj->refcount--;
+snek_object_t *_new_snek_object();
 
-  if (obj->refcount == 0) {
-    refcount_free(obj);
+snek_object_t *new_snek_vector3(snek_object_t *x, snek_object_t *y,
+                                snek_object_t *z) {
+  if (x == NULL || y == NULL || z == NULL) {
+    return NULL;
   }
+  snek_object_t *obj = _new_snek_object();
+  if (obj == NULL) {
+    return NULL;
+  }
+  obj->kind = VECTOR3;
+  obj->data.v_vector3 = (snek_vector_t){.x = x, .y = y, .z = z};
+  refcount_inc(obj->data.v_vector3.x);
+  refcount_inc(obj->data.v_vector3.y);
+  refcount_inc(obj->data.v_vector3.z);
+  return obj;
 }
 
 void refcount_free(snek_object_t *obj) {
-  if (obj->kind == INTEGER || obj->kind == FLOAT) {
-    free(obj);
+  switch (obj->kind) {
+  case INTEGER:
+  case FLOAT:
+    break;
+  case STRING:
+    free(obj->data.v_string);
+    break;
+  case VECTOR3: {
+    refcount_dec(obj->data.v_vector3.x);
+    refcount_dec(obj->data.v_vector3.y);
+    refcount_dec(obj->data.v_vector3.z);
+    break;
+  }
+  default:
+    assert(false);
   }
 
-  if (obj->kind == STRING) {
-    free(obj->data.v_string);
-    free(obj);
-  }
+  free(obj);
 }
 
 void refcount_inc(snek_object_t *obj) {
@@ -33,6 +51,17 @@ void refcount_inc(snek_object_t *obj) {
   }
 
   obj->refcount++;
+  return;
+}
+
+void refcount_dec(snek_object_t *obj) {
+  if (obj == NULL) {
+    return;
+  }
+  obj->refcount--;
+  if (obj->refcount == 0) {
+    return refcount_free(obj);
+  }
   return;
 }
 
@@ -61,23 +90,6 @@ snek_object_t *new_snek_array(size_t size) {
 
   obj->kind = ARRAY;
   obj->data.v_array = (snek_array_t){.size = size, .elements = elements};
-
-  return obj;
-}
-
-snek_object_t *new_snek_vector3(snek_object_t *x, snek_object_t *y,
-                                snek_object_t *z) {
-  if (x == NULL || y == NULL || z == NULL) {
-    return NULL;
-  }
-
-  snek_object_t *obj = _new_snek_object();
-  if (obj == NULL) {
-    return NULL;
-  }
-
-  obj->kind = VECTOR3;
-  obj->data.v_vector3 = (snek_vector_t){.x = x, .y = y, .z = z};
 
   return obj;
 }
