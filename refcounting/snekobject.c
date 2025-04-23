@@ -5,12 +5,35 @@
 
 #include "snekobject.h"
 
+void refcount_dec(snek_object_t *obj) {
+  if (obj == NULL) {
+    return;
+  }
+  obj->refcount--;
+
+  if (obj->refcount == 0) {
+    refcount_free(obj);
+  }
+}
+
+void refcount_free(snek_object_t *obj) {
+  if (obj->kind == INTEGER || obj->kind == FLOAT) {
+    free(obj);
+  }
+
+  if (obj->kind == STRING) {
+    free(obj->data.v_string);
+    free(obj);
+  }
+}
+
 void refcount_inc(snek_object_t *obj) {
   if (obj == NULL) {
     return;
   }
 
   obj->refcount++;
+  return;
 }
 
 snek_object_t *_new_snek_object() {
