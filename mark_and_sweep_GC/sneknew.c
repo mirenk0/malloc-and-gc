@@ -10,8 +10,11 @@ snek_object_t *_new_snek_object(vm_t *vm) {
   if (obj == NULL) {
     return NULL;
   }
-  vm_track_object(vm, obj);
+
   obj->is_marked = false;
+
+  vm_track_object(vm, obj);
+
   return obj;
 }
 

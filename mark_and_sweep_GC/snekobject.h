@@ -42,3 +42,6 @@ typedef struct SnekObject {
 } snek_object_t;
 
 void snek_object_free(snek_object_t *obj);
+
+bool snek_array_set(snek_object_t *array, size_t index, snek_object_t *value);
+snek_object_t *snek_array_get(snek_object_t *array, size_t index);
