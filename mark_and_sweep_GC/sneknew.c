@@ -6,11 +6,17 @@
 #include "vm.h"
 
 snek_object_t *_new_snek_object(vm_t *vm) {
+  // You could malloc this, but it's a bit safer to calloc and make sure
+  // everything is cleared first (which malloc does not do) so every field
+  // is set to it's zero value.
   snek_object_t *obj = calloc(1, sizeof(snek_object_t));
   if (obj == NULL) {
     return NULL;
   }
+
+  // Keep track that we've created a new object
   vm_track_object(vm, obj);
+
   return obj;
 }
 

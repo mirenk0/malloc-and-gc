@@ -1,4 +1,5 @@
 #pragma once
+
 #include "snekobject.h"
 #include "stack.h"
 
@@ -19,3 +20,5 @@ void vm_frame_push(vm_t *vm, frame_t *frame);
 frame_t *vm_new_frame(vm_t *vm);
 
 void frame_free(frame_t *frame);
+
+void frame_reference_object(frame_t *frame, snek_object_t *obj);
