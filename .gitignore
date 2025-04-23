@@ -1,2 +1,4 @@
-*.o
+main.o
+malloc.o
+
 ./test_malloc
