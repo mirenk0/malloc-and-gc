@@ -1,15 +1,26 @@
+#include "assert.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "snekobject.h"
 
+void refcount_inc(snek_object_t *obj) {
+  if (obj == NULL) {
+    return;
+  }
+
+  obj->refcount++;
+}
+
 snek_object_t *_new_snek_object() {
-  snek_object_t *obj = malloc(sizeof(NULL));
+  snek_object_t *obj = calloc(1, sizeof(snek_object_t));
   if (obj == NULL) {
     return NULL;
   }
 
   obj->refcount = 1;
+
   return obj;
 }
 
