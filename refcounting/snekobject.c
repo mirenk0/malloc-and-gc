@@ -5,23 +5,23 @@
 
 #include "snekobject.h"
 
-snek_object_t *_new_snek_object();
-
-snek_object_t *new_snek_vector3(snek_object_t *x, snek_object_t *y,
-                                snek_object_t *z) {
-  if (x == NULL || y == NULL || z == NULL) {
-    return NULL;
+bool snek_array_set(snek_object_t *snek_obj, size_t index,
+                    snek_object_t *value) {
+  if (snek_obj == NULL || value == NULL) {
+    return false;
   }
-  snek_object_t *obj = _new_snek_object();
-  if (obj == NULL) {
-    return NULL;
+  if (snek_obj->kind != ARRAY) {
+    return false;
   }
-  obj->kind = VECTOR3;
-  obj->data.v_vector3 = (snek_vector_t){.x = x, .y = y, .z = z};
-  refcount_inc(obj->data.v_vector3.x);
-  refcount_inc(obj->data.v_vector3.y);
-  refcount_inc(obj->data.v_vector3.z);
-  return obj;
+  if (index >= snek_obj->data.v_array.size) {
+    return false;
+  }
+  if (snek_obj->data.v_array.elements[index] != NULL) {
+    refcount_dec(snek_obj->data.v_array.elements[index]);
+  }
+  snek_obj->data.v_array.elements[index] = value;
+  refcount_inc(snek_obj->data.v_array.elements[index]);
+  return true;
 }
 
 void refcount_free(snek_object_t *obj) {
@@ -33,16 +33,39 @@ void refcount_free(snek_object_t *obj) {
     free(obj->data.v_string);
     break;
   case VECTOR3: {
-    refcount_dec(obj->data.v_vector3.x);
-    refcount_dec(obj->data.v_vector3.y);
-    refcount_dec(obj->data.v_vector3.z);
+    snek_vector_t vec = obj->data.v_vector3;
+    refcount_dec(vec.x);
+    refcount_dec(vec.y);
+    refcount_dec(vec.z);
+    break;
+  }
+  case ARRAY: {
+    for (int i = 0; i < obj->data.v_array.size; i++) {
+      refcount_dec(obj->data.v_array.elements[i]);
+    }
+    free(obj->data.v_array.elements);
     break;
   }
   default:
     assert(false);
   }
-
   free(obj);
+}
+
+snek_object_t *snek_array_get(snek_object_t *snek_obj, size_t index) {
+  if (snek_obj == NULL) {
+    return NULL;
+  }
+
+  if (snek_obj->kind != ARRAY) {
+    return NULL;
+  }
+
+  if (index >= snek_obj->data.v_array.size) {
+    return NULL;
+  }
+
+  return snek_obj->data.v_array.elements[index];
 }
 
 void refcount_inc(snek_object_t *obj) {
@@ -133,5 +156,22 @@ snek_object_t *new_snek_string(char *value) {
 
   obj->kind = STRING;
   obj->data.v_string = dst;
+  return obj;
+}
+
+snek_object_t *new_snek_vector3(snek_object_t *x, snek_object_t *y,
+                                snek_object_t *z) {
+  if (x == NULL || y == NULL || z == NULL) {
+    return NULL;
+  }
+  snek_object_t *obj = _new_snek_object();
+  if (obj == NULL) {
+    return NULL;
+  }
+  obj->kind = VECTOR3;
+  obj->data.v_vector3 = (snek_vector_t){.x = x, .y = y, .z = z};
+  refcount_inc(x);
+  refcount_inc(y);
+  refcount_inc(z);
   return obj;
 }
